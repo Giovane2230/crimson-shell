@@ -13,6 +13,6 @@ PanelWindow {
   Text {
     anchors.centerIn: parent
     text: "hello mario."
-    color> "#cdd6f4"
+    color: "#cdd6f4"
   }
 }
