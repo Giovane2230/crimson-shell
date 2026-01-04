@@ -9,6 +9,7 @@ PanelWindow {
     right: true
     implicitHeight: 30
     color: "#1e1e2e"
+  }
 
   Text {
     anchors.centerIn: parent
