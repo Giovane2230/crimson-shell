@@ -5,6 +5,7 @@ import "components"
 
 ShellRoot {
     Bar {
-        height: 22
+        size: 20
+        position: Bar.Position.Left
     }
 }
