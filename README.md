@@ -25,4 +25,8 @@ Crimson Shell aims to be a modern desktop shell that combines:
  - [ ] System monitor widgets
 
 ### Installation
-TODO
+Simply clone this repo and run it with quickshell
+```
+git clone https://github.com/Giovane2230/crimson-shell
+quickshell -p ./crimson-shell/shell.qml
+```
