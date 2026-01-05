@@ -8,4 +8,4 @@ default:
 run:
     niri &
     sleep 5
-    niri msg action spawn -- bash -c "pkill quickshell; quickshell"
+    niri msg action spawn -- bash -c "pkill quickshell; quickshell -p ./shell.qml"
