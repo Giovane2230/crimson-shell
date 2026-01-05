@@ -19,7 +19,7 @@ Rectangle {
     property bool isInitialized: false
     
     signal initialized()
-    signal configChanged(var newConfig)
+    signal onConfigChange(var anotherConfig)
     
     // Visual
     color: "transparent"
@@ -70,6 +70,6 @@ Rectangle {
         config = Object.assign({}, config, newConfig)
         clockTimer.interval = config.show_seconds ? 1000 : 60000
         updateTime()
-        configChanged(config)
+        onConfigChange(config)
     }
 }

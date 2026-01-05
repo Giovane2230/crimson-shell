@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import QtQuick.Layouts
 
 PanelWindow {
     enum Position {
@@ -17,43 +18,41 @@ PanelWindow {
         right: position !== Bar.Position.Left
     }
     
+    property alias left: leftSlot.children
+    property alias center: centerSlot.children
+    property alias right: rightSlot.children
     property int position: Bar.Position.Top
     property int size
     property string bar_color
+    property bool is_horizontal: position === Bar.Position.Top || position === Bar.Position.Bottom
+    property bool is_vertical: !is_horizontal    
     //when this is TOP or BOTTOM, the width must be 100%, so we ignore it, this is just modificated when on the X axis
-    width: position === Bar.Position.Right || position === Bar.Position.Left ? size : undefined
+    implicitWidth: is_vertical ? size : undefined
     //same logic as above, but applied to Y axis
-    height: position === Bar.Position.Top || position === Bar.Position.Bottom ? size : undefined 
+    implicitHeight: is_horizontal ? size : undefined 
         
-    
-    Rectangle {
+    RowLayout {
+        
+        Rectangle {
+            color: bar_color
+            anchors.fill: parent
+        }
         anchors.fill: parent
-        color:bar_color 
-         
-        Row {
-            id: leftSection
-            anchors {
-                left: parent.left
-                leftMargin: 10
-                verticalCenter: parent.verticalCenter
-            }
-            spacing: 10
-        }
         
-        Row {
-            id: centerSection
-            anchors.centerIn: parent
-            spacing: 10
+        RowLayout {
+            id: leftSlot
+            anchors.leftMargin: 10
         }
-        
-        Row {
-            id: rightSection
-            anchors {
-                right: parent.right
-                rightMargin: 10
-                verticalCenter: parent.verticalCenter
-            }
-            spacing: 10
+        Item { Layout.fillWidth: true }
+        RowLayout {
+            id: centerSlot
+        }
+        Item { Layout.fillWidth: true }
+        RowLayout { 
+            id: rightSlot
+            anchors.rightMargin: 10
         }
     }
+    
+    
 }
