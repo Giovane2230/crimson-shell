@@ -5,6 +5,6 @@ import "components"
 
 ShellRoot {
     Bar {
-      
+        height: 22
     }
 }
