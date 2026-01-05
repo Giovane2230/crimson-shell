@@ -7,8 +7,7 @@ PanelWindow {
     top: true
     left: true
     right: true
-    implicitHeight: 30
-    color: "#1e1e2e"
+
   }
 
   Text {
