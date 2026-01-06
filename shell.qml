@@ -7,8 +7,10 @@ import "components/bar/widgets"
 ShellRoot {
     Bar {
         bar_color: "#000000"
-        size: 40
-        position: Bar.Position.Top
+        size: 50
+        margin: 40
+        padding: 0
+        position: Bar.Position.Right
         left:Text {
             text: "Olamigo"
             color: "#00ff00"
