@@ -1,137 +1,138 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Wayland
 import Quickshell.Services.Pipewire
-import Quickshell.Widgets
 
 Scope {
-	id: root
+    id: root
 
-	PwObjectTracker {
-		objects: [ Pipewire.defaultAudioSink ]
-	}
+    PwObjectTracker {
+        objects: [ Pipewire.defaultAudioSink ]
+    }
 
-	Connections {
-		target: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio : null
+    property bool shouldShowOsd: false
+    property real currentVolume: Math.max(0, Pipewire.defaultAudioSink?.audio?.volume ?? 0)
+    property bool isMuted: Pipewire.defaultAudioSink?.audio?.muted ?? false
 
-		function onVolumeChanged() {
-			root.shouldShowOsd = true;
-			hideTimer.restart();
-		}
+    Connections {
+        target: Pipewire.defaultAudioSink?.audio
+        function onVolumeChanged() { root.restartTimer(); }
+        function onMutedChanged() { root.restartTimer(); }
+    }
 
-		function onMutedChanged() {
-			root.shouldShowOsd = true;
-			hideTimer.restart();
-		}
-	}
+    function restartTimer() {
+        root.shouldShowOsd = true;
+        hideTimer.restart();
+    }
 
-	property bool shouldShowOsd: false
-	property real currentVolume: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.volume : 0
-	property bool isMuted: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.muted : false
+    Timer {
+        id: hideTimer
+        interval: 2000
+        onTriggered: root.shouldShowOsd = false
+    }
 
-	function getVolumeIconPath() {
-		if (isMuted) return Quickshell.iconPath("audio-volume-muted-symbolic") || Quickshell.iconPath("audio-volume-off");
-		if (currentVolume < 0.33) return Quickshell.iconPath("audio-volume-low-symbolic") || Quickshell.iconPath("audio-volume-low");
-		if (currentVolume < 0.66) return Quickshell.iconPath("audio-volume-medium-symbolic") || Quickshell.iconPath("audio-volume-medium");
-		return Quickshell.iconPath("audio-volume-high-symbolic") || Quickshell.iconPath("audio-volume-high");
-	}
+    function getVolumeIconPath() {
+        if (root.isMuted) return Quickshell.iconPath("audio-volume-muted-symbolic") || Quickshell.iconPath("audio-volume-off");
+        if (root.currentVolume < 0.33) return Quickshell.iconPath("audio-volume-low-symbolic") || Quickshell.iconPath("audio-volume-low");
+        if (root.currentVolume < 0.66) return Quickshell.iconPath("audio-volume-medium-symbolic") || Quickshell.iconPath("audio-volume-medium");
+        return Quickshell.iconPath("audio-volume-high-symbolic") || Quickshell.iconPath("audio-volume-high");
+    }
 
-	Timer {
-		id: hideTimer
-		interval: 2000
-		onTriggered: root.shouldShowOsd = false
-	}
+    TextMetrics {
+        id: metricsPercent
+        font: volumeText.font
+        text: "100%"
+    }
 
-	LazyLoader {
-		active: root.shouldShowOsd
+    TextMetrics {
+        id: metricsMute
+        font: volumeText.font
+        text: "MUTE"
+    }
 
-		PanelWindow {
+    PanelWindow {
+        id: osdWindow
+        anchors { bottom: true; left: true; right: true }
+        height: 100
 
-			anchors.bottom: true
-			margins.bottom: screen.height / 5
-			exclusiveZone: 0
+        WlrLayershell.layer: WlrLayershell.Layer.Overlay
+        exclusionMode: ExclusionMode.Ignore
+        color: "transparent"
+        visible: true
 
-			implicitWidth: 400
-			implicitHeight: 50
-			color: "transparent"
+        Rectangle {
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottomMargin: 50
 
-			mask: Region {}
+            width: 350
+            height: 50
+            radius: 0
+            
+            color: "#1E2528"
+            border.color: "#262F33"
+            border.width: 1
 
-			Rectangle {
-				anchors.fill: parent
-				radius: height / 2
-				color: "#80000000"
+            opacity: root.shouldShowOsd ? 1.0 : 0.0
+            Behavior on opacity { NumberAnimation { duration: 200 } }
 
-				RowLayout {
-					anchors {
-						fill: parent
-						leftMargin: 10
-						rightMargin: 15
-					}
-					spacing: 15
+            RowLayout {
+                anchors.fill: parent
+                anchors.leftMargin: 20
+                anchors.rightMargin: 20
+                spacing: 15
 
-					Rectangle {
-						Layout.fillWidth: false
-						implicitWidth: 30
-						implicitHeight: 30
-						color: "transparent"
-						
-						IconImage {
-							anchors.fill: parent
-							source: root.getVolumeIconPath()
-							opacity: root.isMuted ? 0.5 : 1.0
-							
-							Behavior on opacity {
-								NumberAnimation { duration: 150 }
-							}
-						}
-					}
+                Image {
+                    Layout.preferredWidth: 24
+                    Layout.preferredHeight: 24
+                    Layout.alignment: Qt.AlignVCenter
+                    source: root.getVolumeIconPath()
+                    fillMode: Image.PreserveAspectFit
+                    opacity: root.isMuted ? 0.5 : 1.0
+                }
 
-					Rectangle {
-						Layout.fillWidth: true
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.alignment: Qt.AlignVCenter
+                    height: 6
+                    radius: 0
+                    color: "#171C1F"
 
-						implicitHeight: 10
-						radius: 20
-						color: "#50ffffff"
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        
+                        width: parent.width * Math.min(1.0, root.currentVolume)
+                        radius: 0
+                        color: root.isMuted ? "#F57F82" : "#CBE3B3"
+                        visible: width > 1
 
-						Rectangle {
-							anchors {
-								left: parent.left
-								top: parent.top
-								bottom: parent.bottom
-							}
+                        Behavior on width {
+                            NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                        }
+                        Behavior on color {
+                            ColorAnimation { duration: 150 }
+                        }
+                    }
+                }
 
-							width: parent.width * root.currentVolume
-							radius: parent.radius
-							color: root.isMuted ? "#666666" : "#4da6ff"
-
-							Behavior on width {
-								NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
-							}
-
-							Behavior on color {
-								ColorAnimation { duration: 150 }
-							}
-						}
-					}
-
-					Text {
-						text: root.isMuted ? "MUTE" : Math.round(root.currentVolume * 100) + "%"
-						color: "white"
-						font.pixelSize: 14
-						font.bold: true
-						Layout.minimumWidth: 45
-
-						Behavior on opacity {
-							NumberAnimation { duration: 150 }
-						}
-					}
-				}
-
-				Behavior on opacity {
-					NumberAnimation { duration: 200 }
-				}
-			}
-		}
-	}
+                Text {
+                    id: volumeText
+                    text: root.isMuted ? "MUTE" : Math.round(root.currentVolume * 100) + "%"
+                    color: "#F8F9E8"
+                    font.pixelSize: 14
+                    font.bold: true
+                    
+                    Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
+                    verticalAlignment: Text.AlignVCenter
+                    horizontalAlignment: Text.AlignRight
+                    
+                    Layout.preferredWidth: Math.ceil(Math.max(metricsPercent.width, metricsMute.width))
+                    Layout.preferredHeight: Math.ceil(metricsPercent.height)
+                }
+            }
+        }
+    }
 }
